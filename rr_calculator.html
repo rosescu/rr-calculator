@@ -5,51 +5,58 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RR Calculator</title>
 <style>
-  html, body { margin:0; padding:0; background:#fafaf8; }
-  body { font-family: Georgia, serif; padding:14px; }
-  input { font-family: Georgia, serif; padding:4px 6px; border-radius:4px; border:1px solid #ccc; }
-  .vcursor { width:20px; height:20px; left:1px; border-radius:4px; border:2px solid; cursor:ns-resize; user-select:none; box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
+  html, body { margin:0; padding:0; background:#fafaf8; min-width:0; }
+  body { font-family: Georgia, serif; padding:8px; }
+  input { font-family: Georgia, serif; padding:3px 4px; border-radius:4px; border:1px solid #ccc; box-sizing:border-box; }
+  .hcursor { width:16px; height:16px; top:3px; border-radius:4px; border:2px solid; cursor:ew-resize; user-select:none; box-shadow: 0 1px 3px rgba(0,0,0,0.25); transform:translateX(-8px); }
 </style>
 </head>
 <body>
 
-<div style="display:flex; gap:20px;">
+<div style="display:flex; align-items:flex-end; gap:14px; flex-wrap:nowrap;">
 
-<div style="position:relative; width:26px; height:420px; flex-shrink:0;" id="scaleWrap">
-  <div style="position:absolute; left:11px; top:0; bottom:0; width:2px; background:#999;"></div>
-  <div id="priceLine" style="position:absolute; left:0; right:0; height:1px; border-top:1px dashed #999;"></div>
-  <div id="cursorTP" class="vcursor" style="position:absolute; background:#16a34a; border-color:#15803d;"></div>
-  <div id="cursorE" class="vcursor" style="position:absolute; background:#eab308; border-color:#a16207;"></div>
-  <div id="cursorSL" class="vcursor" style="position:absolute; background:#dc2626; border-color:#b91c1c;"></div>
-</div>
-
-<div style="flex:1; max-width:240px; display:flex; flex-direction:column;">
-
-  <p style="font-size:12px; color:#666; margin:0 0 2px;">Preț curent</p>
-  <input type="number" id="priceInput" value="7500" step="0.25" style="width:100px; font-size:15px; margin-bottom:10px;">
-
-  <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:14px;">
-    <span style="font-size:14px;">RR</span>
-    <span id="rrVal" style="font-size:22px; font-weight:600;">-</span>
+  <div style="display:flex; flex-direction:column;">
+    <span style="font-size:10px; color:#666; margin-bottom:2px;">&nbsp;</span>
+    <label style="font-size:11px; color:#666; margin-bottom:2px;">preț curent</label>
+    <input type="number" id="priceInput" value="7500" step="0.25" style="width:90px; font-size:14px;">
   </div>
 
-  <p style="font-size:13px; color:#15803d; margin:0 0 2px; font-weight:600;">target (TP)</p>
-  <input type="number" id="tpVal" step="0.25" style="width:100px; font-size:15px; border-color:#16a34a; border-width:2px;">
-  <p id="rewardPts" style="font-size:12px; color:#666; margin:3px 0 12px;">-</p>
+  <div style="display:flex; flex-direction:column;">
+    <span id="riskPts" style="font-size:10px; color:#666; margin-bottom:2px;">-</span>
+    <label style="font-size:11px; color:#b91c1c; font-weight:600; margin-bottom:2px;">stop (SL)</label>
+    <input type="number" id="slVal" step="0.25" style="width:90px; font-size:14px; border-color:#dc2626; border-width:2px;">
+  </div>
 
-  <p style="font-size:13px; color:#a16207; margin:0 0 2px; font-weight:600;">entry (E)</p>
-  <input type="number" id="eVal" step="0.25" style="width:100px; font-size:15px; border-color:#eab308; border-width:2px;">
+  <div style="display:flex; flex-direction:column;">
+    <span style="font-size:10px; color:#666; margin-bottom:2px;">&nbsp;</span>
+    <label style="font-size:11px; color:#a16207; font-weight:600; margin-bottom:2px;">entry (E)</label>
+    <input type="number" id="eVal" step="0.25" style="width:90px; font-size:14px; border-color:#eab308; border-width:2px;">
+  </div>
 
-  <p style="font-size:12px; color:#666; margin:3px 0 3px;" id="riskPts">-</p>
-  <p style="font-size:13px; color:#b91c1c; margin:10px 0 2px; font-weight:600;">stop (SL)</p>
-  <input type="number" id="slVal" step="0.25" style="width:100px; font-size:15px; border-color:#dc2626; border-width:2px;">
+  <div style="display:flex; flex-direction:column;">
+    <span id="rewardPts" style="font-size:10px; color:#666; margin-bottom:2px;">-</span>
+    <label style="font-size:11px; color:#15803d; font-weight:600; margin-bottom:2px;">target (TP)</label>
+    <input type="number" id="tpVal" step="0.25" style="width:90px; font-size:14px; border-color:#16a34a; border-width:2px;">
+  </div>
 
-  <div id="rrFlag" style="margin-top:14px; text-align:left; font-size:12px; font-weight:600; padding:6px 9px; border-radius:6px; width:fit-content;"></div>
+  <div style="display:flex; flex-direction:column; align-items:flex-start;">
+    <span style="font-size:11px; color:#666;">RR</span>
+    <span id="rrVal" style="font-size:20px; font-weight:600; line-height:1.1;">-</span>
+  </div>
 
-  <p style="font-size:12px; color:#888; margin-top:12px;">risc ES: <strong id="riskES" style="color:#222;">-</strong></p>
+  <div style="display:flex; flex-direction:column; gap:4px;">
+    <div id="rrFlag" style="font-size:11px; font-weight:600; padding:4px 8px; border-radius:6px; white-space:nowrap;"></div>
+    <span style="font-size:10px; color:#888;">risc ES: <strong id="riskES" style="color:#222;">-</strong></span>
+  </div>
 
 </div>
 
+<div style="position:relative; width:100%; height:24px; margin-top:10px;" id="scaleWrap">
+  <div style="position:absolute; left:0; right:0; top:11px; height:2px; background:#999;"></div>
+  <div id="priceLine" style="position:absolute; top:0; bottom:0; width:1px; border-left:1px dashed #999;"></div>
+  <div id="cursorSL" class="hcursor" style="position:absolute; background:#dc2626; border-color:#b91c1c;"></div>
+  <div id="cursorE" class="hcursor" style="position:absolute; background:#eab308; border-color:#a16207;"></div>
+  <div id="cursorTP" class="hcursor" style="position:absolute; background:#16a34a; border-color:#15803d;"></div>
 </div>
 
 <script>
@@ -63,35 +70,38 @@ const tpVal = document.getElementById('tpVal');
 const eVal = document.getElementById('eVal');
 const slVal = document.getElementById('slVal');
 
-const H = 420;
 let centerPrice = parseFloat(priceInput.value);
-const RANGE = 20;
+const RANGE = 40;
+const ANCHOR = 1/3; // pozitia centerPrice pe scala: 1/3 din stanga
 let tp = centerPrice - 5;
 let e = centerPrice + 1.75;
 let sl = centerPrice + 4;
 
-function priceToY(p) {
-  const frac = (centerPrice + RANGE/2 - p) / RANGE;
-  return frac * H;
+function getW() { return scaleWrap.getBoundingClientRect().width || 600; }
+
+function priceToX(p) {
+  const w = getW();
+  const x = w * ANCHOR + (p - centerPrice) * (w / RANGE);
+  return x;
 }
-function yToPrice(y) {
-  const frac = y / H;
-  let p = centerPrice + RANGE/2 - frac * RANGE;
+function xToPrice(x) {
+  const w = getW();
+  const p = centerPrice + (x - w * ANCHOR) / (w / RANGE);
   return Math.round(p * 4) / 4;
 }
 
-function clamp(y) { return Math.max(0, Math.min(H - 20, y)); }
+function clampX(x) { const w = getW(); return Math.max(0, Math.min(w, x)); }
 
 function positionCursor(el, price) {
-  const y = clamp(priceToY(price) - 10);
-  el.style.top = y + 'px';
+  const x = clampX(priceToX(price));
+  el.style.left = x + 'px';
 }
 
 function update() {
   positionCursor(cursorTP, tp);
   positionCursor(cursorE, e);
   positionCursor(cursorSL, sl);
-  priceLine.style.top = priceToY(centerPrice) + 'px';
+  priceLine.style.left = clampX(priceToX(centerPrice)) + 'px';
 
   tpVal.value = tp.toFixed(2);
   eVal.value = e.toFixed(2);
@@ -127,8 +137,8 @@ function makeDraggable(el, setVal) {
   el.addEventListener('pointermove', (ev) => {
     if (!dragging) return;
     const rect = scaleWrap.getBoundingClientRect();
-    const y = ev.clientY - rect.top;
-    setVal(yToPrice(clamp(y) + 10));
+    const x = ev.clientX - rect.left;
+    setVal(xToPrice(clampX(x)));
     update();
   });
   el.addEventListener('pointerup', () => dragging = false);
@@ -155,6 +165,7 @@ priceInput.addEventListener('change', () => {
   });
 });
 
+window.addEventListener('resize', update);
 update();
 </script>
 
