@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RR Calculator</title>
+<style>
+  html, body { margin:0; padding:0; background:#fafaf8; }
+  body { font-family: Georgia, serif; padding:14px; }
+  input { font-family: Georgia, serif; padding:4px 6px; border-radius:4px; border:1px solid #ccc; }
+  .vcursor { width:20px; height:20px; left:1px; border-radius:4px; border:2px solid; cursor:ns-resize; user-select:none; box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
+</style>
+</head>
+<body>
+
+<div style="display:flex; gap:20px;">
+
+<div style="position:relative; width:26px; height:420px; flex-shrink:0;" id="scaleWrap">
+  <div style="position:absolute; left:11px; top:0; bottom:0; width:2px; background:#999;"></div>
+  <div id="priceLine" style="position:absolute; left:0; right:0; height:1px; border-top:1px dashed #999;"></div>
+  <div id="cursorTP" class="vcursor" style="position:absolute; background:#16a34a; border-color:#15803d;"></div>
+  <div id="cursorE" class="vcursor" style="position:absolute; background:#eab308; border-color:#a16207;"></div>
+  <div id="cursorSL" class="vcursor" style="position:absolute; background:#dc2626; border-color:#b91c1c;"></div>
+</div>
+
+<div style="flex:1; max-width:240px; display:flex; flex-direction:column;">
+
+  <p style="font-size:12px; color:#666; margin:0 0 2px;">Preț curent</p>
+  <input type="number" id="priceInput" value="7500" step="0.25" style="width:100px; font-size:15px; margin-bottom:10px;">
+
+  <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:14px;">
+    <span style="font-size:14px;">RR</span>
+    <span id="rrVal" style="font-size:22px; font-weight:600;">-</span>
+  </div>
+
+  <p style="font-size:13px; color:#15803d; margin:0 0 2px; font-weight:600;">target (TP)</p>
+  <input type="number" id="tpVal" step="0.25" style="width:100px; font-size:15px; border-color:#16a34a; border-width:2px;">
+  <p id="rewardPts" style="font-size:12px; color:#666; margin:3px 0 12px;">-</p>
+
+  <p style="font-size:13px; color:#a16207; margin:0 0 2px; font-weight:600;">entry (E)</p>
+  <input type="number" id="eVal" step="0.25" style="width:100px; font-size:15px; border-color:#eab308; border-width:2px;">
+
+  <p style="font-size:12px; color:#666; margin:3px 0 3px;" id="riskPts">-</p>
+  <p style="font-size:13px; color:#b91c1c; margin:10px 0 2px; font-weight:600;">stop (SL)</p>
+  <input type="number" id="slVal" step="0.25" style="width:100px; font-size:15px; border-color:#dc2626; border-width:2px;">
+
+  <div id="rrFlag" style="margin-top:14px; text-align:left; font-size:12px; font-weight:600; padding:6px 9px; border-radius:6px; width:fit-content;"></div>
+
+  <p style="font-size:12px; color:#888; margin-top:12px;">risc ES: <strong id="riskES" style="color:#222;">-</strong></p>
+
+</div>
+
+</div>
+
+<script>
+const priceInput = document.getElementById('priceInput');
+const scaleWrap = document.getElementById('scaleWrap');
+const priceLine = document.getElementById('priceLine');
+const cursorTP = document.getElementById('cursorTP');
+const cursorE = document.getElementById('cursorE');
+const cursorSL = document.getElementById('cursorSL');
+const tpVal = document.getElementById('tpVal');
+const eVal = document.getElementById('eVal');
+const slVal = document.getElementById('slVal');
+
+const H = 420;
+let centerPrice = parseFloat(priceInput.value);
+const RANGE = 20;
+let tp = centerPrice - 5;
+let e = centerPrice + 1.75;
+let sl = centerPrice + 4;
+
+function priceToY(p) {
+  const frac = (centerPrice + RANGE/2 - p) / RANGE;
+  return frac * H;
+}
+function yToPrice(y) {
+  const frac = y / H;
+  let p = centerPrice + RANGE/2 - frac * RANGE;
+  return Math.round(p * 4) / 4;
+}
+
+function clamp(y) { return Math.max(0, Math.min(H - 20, y)); }
+
+function positionCursor(el, price) {
+  const y = clamp(priceToY(price) - 10);
+  el.style.top = y + 'px';
+}
+
+function update() {
+  positionCursor(cursorTP, tp);
+  positionCursor(cursorE, e);
+  positionCursor(cursorSL, sl);
+  priceLine.style.top = priceToY(centerPrice) + 'px';
+
+  tpVal.value = tp.toFixed(2);
+  eVal.value = e.toFixed(2);
+  slVal.value = sl.toFixed(2);
+
+  const riskPts = Math.abs(e - sl);
+  const rewardPts = Math.abs(tp - e);
+  const rr = riskPts > 0 ? (rewardPts / riskPts) : 0;
+
+  document.getElementById('riskPts').textContent = riskPts.toFixed(2) + ' (pts)';
+  document.getElementById('rewardPts').textContent = rewardPts.toFixed(2) + ' (pts)';
+  document.getElementById('riskES').textContent = '$' + (riskPts * 50).toFixed(2);
+  document.getElementById('rrVal').textContent = rr.toFixed(2);
+
+  const flag = document.getElementById('rrFlag');
+  if (rr >= 2) {
+    flag.textContent = 'RR ≥ 2 — valid';
+    flag.style.background = '#dcfce7';
+    flag.style.color = '#15803d';
+  } else {
+    flag.textContent = 'RR < 2 — STOP';
+    flag.style.background = '#fee2e2';
+    flag.style.color = '#b91c1c';
+  }
+}
+
+function makeDraggable(el, setVal) {
+  let dragging = false;
+  el.addEventListener('pointerdown', (ev) => {
+    dragging = true;
+    el.setPointerCapture(ev.pointerId);
+  });
+  el.addEventListener('pointermove', (ev) => {
+    if (!dragging) return;
+    const rect = scaleWrap.getBoundingClientRect();
+    const y = ev.clientY - rect.top;
+    setVal(yToPrice(clamp(y) + 10));
+    update();
+  });
+  el.addEventListener('pointerup', () => dragging = false);
+  el.addEventListener('pointercancel', () => dragging = false);
+}
+
+makeDraggable(cursorTP, (v) => tp = v);
+makeDraggable(cursorE, (v) => e = v);
+makeDraggable(cursorSL, (v) => sl = v);
+
+priceInput.addEventListener('change', () => {
+  centerPrice = parseFloat(priceInput.value) || centerPrice;
+  update();
+});
+
+[tpVal, eVal, slVal].forEach((input, i) => {
+  input.addEventListener('change', () => {
+    const v = parseFloat(input.value);
+    if (isNaN(v)) return;
+    if (i === 0) tp = v;
+    if (i === 1) e = v;
+    if (i === 2) sl = v;
+    update();
+  });
+});
+
+update();
+</script>
+
+</body>
+</html>
